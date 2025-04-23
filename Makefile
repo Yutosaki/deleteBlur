@@ -14,7 +14,7 @@ up: ## Start the application
 
 # Stop the application
 down: ## Stop the application
-	@docker-compose down -v
+    @docker compose -f backend/docker-compose.yml down -v
 
 # Format Go code
 fmt: ## Format all Go code files
