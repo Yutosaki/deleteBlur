@@ -16,4 +16,4 @@ services:
     environment:
       SWAGGER_JSON: /swagger/openapi.yml
     volumes:
-      - ../openapi.yml:/swagger/openapi.yml
+      - ./openapi.yml:/swagger/openapi.yml
