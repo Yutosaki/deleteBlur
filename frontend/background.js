@@ -3,9 +3,9 @@ chrome.action.onClicked.addListener((tab) => {
 		target: { tabId: tab.id },
 		func: () => {
 			for (const el of document.querySelectorAll("*")) {
-			el.style.filter = "none";
-			el.style.opacity = "1";
-		}
+				el.style.filter = "none";
+				el.style.opacity = "1";
+			}
 		},
 	});
 });
