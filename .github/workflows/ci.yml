@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+
+jobs:
+  backend:
+    name: Go Backend
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23'
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Check code formatting
+        run: |
+          UNFORMATTED=$(gofmt -l .)
+          if [ -n "$UNFORMATTED" ]; then
+            echo "以下のファイルはフォーマットされていません:"
+            echo "$UNFORMATTED"
+            exit 1
+          fi
+      
+      - name: Check code Errors
+        run: go vet ./...
+      
+      - name: Install staticcheck
+        run: go install honnef.co/go/tools/cmd/staticcheck@latest
+
+      - name: Run staticcheck (static analysis + lint)
+        run: staticcheck ./...
+
+      - name: Build
+        run: go build -v ./backend/main.go
+
+  frontend:
+    name: Chrome Extension
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Biome
+        uses: biomejs/setup-biome@v2
+        with:
+          version: latest
+      - name: Run Biome
+        run: biome ci .
