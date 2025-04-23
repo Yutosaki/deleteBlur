@@ -1,0 +1,58 @@
+openapi: 3.0.3
+info:
+  title: Reorder API
+  description: Reorder API
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+
+paths:
+  /reorder:
+    post:
+      summary: reorder text
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TextRequest'
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TextResponse'
+        '400':
+          description: bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Missing 'text' field in request body"
+
+components:
+  schemas:
+    TextRequest:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          example: olHel, rowld!
+    TextResponse:
+      type: object
+      properties:
+        text:
+          type: string
+          example: Hello, world!
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Some error occurred"
+
