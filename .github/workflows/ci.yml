@@ -8,6 +8,10 @@ jobs:
     name: Go Backend
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: ./backend
+  
     steps:
       - uses: actions/checkout@v3
       
@@ -20,8 +24,9 @@ jobs:
         run: go mod download
 
       - name: Check code formatting
+        working-directory: ./
         run: |
-          UNFORMATTED=$(gofmt -l .)
+          UNFORMATTED=$(gofmt -l backend)
           if [ -n "$UNFORMATTED" ]; then
             echo "以下のファイルはフォーマットされていません:"
             echo "$UNFORMATTED"
@@ -52,4 +57,4 @@ jobs:
         with:
           version: latest
       - name: Run Biome
-        run: biome ci .
+        run: biome ci . /frontend
