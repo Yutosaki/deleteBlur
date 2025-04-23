@@ -1,5 +1,5 @@
 # Goイメージの選定
-FROM golang:1.23-alpine
+FROM golang:1.21-alpine
 
 # 作業ディレクトリの設定
 WORKDIR /app
