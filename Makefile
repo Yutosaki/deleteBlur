@@ -10,7 +10,7 @@ build: ## Build the Go backend
 
 # Start the application with Docker Compose
 up: ## Start the application
-	@docker compose -f backend/compose.yaml up -d --build
+	@docker compose -f backend/compose.yaml up -d
 
 # Stop the application
 down: ## Stop the application
