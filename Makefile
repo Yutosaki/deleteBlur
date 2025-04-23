@@ -10,11 +10,11 @@ build: ## Build the Go backend
 
 # Start the application with Docker Compose
 up: ## Start the application
-	@docker compose -f backend/docker-compose.yml up -d --build
+	@docker compose -f backend/compose.yaml up -d --build
 
 # Stop the application
 down: ## Stop the application
-	@docker compose -f backend/docker-compose.yml down -v
+	@docker compose -f backend/compose.yaml down -v
 
 # Format Go code
 fmt: ## Format all Go code files
