@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Blur Remover Prototype",
+  "version": "0.1",
+  "permissions": ["scripting", "activeTab"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Remove Blur"
+  }
+}
+
