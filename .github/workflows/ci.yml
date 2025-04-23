@@ -57,4 +57,4 @@ jobs:
         with:
           version: latest
       - name: Run Biome
-        run: biome ci . /frontend
+        run: biome ci frontend
