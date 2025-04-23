@@ -43,7 +43,7 @@ jobs:
         run: staticcheck ./...
 
       - name: Build
-        run: go build -v ./backend/main.go
+        run: go build -v main.go
 
   frontend:
     name: Chrome Extension
