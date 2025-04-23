@@ -5,7 +5,7 @@ FROM golang:1.21-alpine
 WORKDIR /app
 
 # Goモジュールのキャッシュ用
-COPY go.mod ./
+COPY go.mod ./backend
 RUN go mod download
 
 # アプリのコピー
