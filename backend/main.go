@@ -28,7 +28,9 @@ func reorderHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	text := r.FormValue("text")
-	fmt.Println(text)
+    if text == "" {
+        return
+    }
 	result, err := rewriteText(r.Context(), text)
 	if err != nil {
 		return
