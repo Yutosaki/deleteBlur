@@ -28,9 +28,10 @@ func reorderHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	text := r.FormValue("text")
-    if text == "" {
-        return
-    }
+	if text == "" {
+		http.Error(w, "text parameter is required", http.StatusBadRequest)
+		return
+	}
 	result, err := rewriteText(r.Context(), text)
 	if err != nil {
 		return
@@ -72,7 +73,7 @@ func main() {
 	err := godotenv.Load(".env")
 	if err != nil {
 		fmt.Println(err)
-        return
+		return
 	}
 	http.HandleFunc("/", handler)
 	http.HandleFunc("/reorder", reorderHandler)
