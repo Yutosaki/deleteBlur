@@ -72,6 +72,7 @@ func main() {
 	err := godotenv.Load(".env")
 	if err != nil {
 		fmt.Println(err)
+        return
 	}
 	http.HandleFunc("/", handler)
 	http.HandleFunc("/reorder", reorderHandler)
