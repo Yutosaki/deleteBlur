@@ -9,6 +9,6 @@ func SetupCORS(e *echo.Echo) echo.MiddlewareFunc {
     return middleware.CORSWithConfig(middleware.CORSConfig{
         AllowOrigins:     []string{"*"},
         AllowMethods:     []string{"POST"},
-        AllowHeaders:     []string{"Content-Type"},
+        AllowHeaders:     []string{"Content-Type", "Accept"},
     })
 }
