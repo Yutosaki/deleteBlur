@@ -11,14 +11,6 @@ import (
 	"os"
 )
 
-func handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Backend prototype is running!")
-}
-
-func serveOpenAPI(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "./openapi.yml")
-}
-
 type responseJSON struct {
 	Text string `json:"text"`
 }
@@ -75,9 +67,7 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	http.HandleFunc("/", handler)
 	http.HandleFunc("/reorder", reorderHandler)
-	http.HandleFunc("/docs/openapi.yml", serveOpenAPI)
 	fmt.Println("Listening on :8080")
 	http.ListenAndServe(":8080", nil)
 }
