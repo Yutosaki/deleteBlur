@@ -4,13 +4,13 @@
   <meta charset="utf-8">
   <style>
     body {
-      width: 200px;
+      width: 220px;
       padding: 10px;
       font-family: Arial, sans-serif;
     }
     .status-container {
       text-align: center;
-      margin-bottom: 15px;
+      margin-bottom: 10px;
       padding: 8px;
       border-radius: 4px;
     }
@@ -24,10 +24,15 @@
       color: #c62828;
       border: 1px solid #ef9a9a;
     }
+    .feature-title {
+      margin-top: 10px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
     .button-container {
       display: flex;
       justify-content: space-between;
-      margin-top: 10px;
+      margin-top: 5px;
     }
     button {
       padding: 8px 15px;
@@ -37,11 +42,11 @@
       font-weight: bold;
       width: 80px;
     }
-    #onButton {
+    .on-button {
       background-color: #4CAF50;
       color: white;
     }
-    #offButton {
+    .off-button {
       background-color: #f44336;
       color: white;
     }
@@ -52,19 +57,36 @@
       margin-top: 0;
       text-align: center;
     }
+    .features {
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
-  <h3>Blur Removal</h3>
+  <h3>Delete Blur</h3>
   
-  <div id="statusContainer" class="status-container">
-    <span id="statusText">現在の状態: 確認中...</span>
+  <div id="blurStatusContainer" class="status-container">
+    <span id="blurStatusText">ぼかし除去: 確認中...</span>
   </div>
   
-  <div class="button-container">
-    <button id="onButton">ON</button>
-    <button id="offButton">OFF</button>
+  <div id="adBlockStatusContainer" class="status-container">
+    <span id="adBlockStatusText">広告ブロック: 確認中...</span>
   </div>
+  
+  <div class="features">
+    <div class="feature-title">ぼかし除去</div>
+    <div class="button-container">
+      <button id="blurOnButton" class="on-button">ON</button>
+      <button id="blurOffButton" class="off-button">OFF</button>
+    </div>
+    
+    <div class="feature-title">広告ブロック</div>
+    <div class="button-container">
+      <button id="adBlockOnButton" class="on-button">ON</button>
+      <button id="adBlockOffButton" class="off-button">OFF</button>
+    </div>
+  </div>
+  
   <script src="popup.js"></script>
 </body>
 </html>

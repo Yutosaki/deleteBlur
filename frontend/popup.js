@@ -1,25 +1,42 @@
 document.addEventListener("DOMContentLoaded", () => {
-	const onButton = document.getElementById("onButton");
-	const offButton = document.getElementById("offButton");
-	const statusContainer = document.getElementById("statusContainer");
-	const statusText = document.getElementById("statusText");
+	const blurOnButton = document.getElementById("blurOnButton");
+	const blurOffButton = document.getElementById("blurOffButton");
+	const adBlockOnButton = document.getElementById("adBlockOnButton");
+	const adBlockOffButton = document.getElementById("adBlockOffButton");
+	const blurStatusContainer = document.getElementById("blurStatusContainer");
+	const blurStatusText = document.getElementById("blurStatusText");
+	const adBlockStatusContainer = document.getElementById(
+		"adBlockStatusContainer",
+	);
+	const adBlockStatusText = document.getElementById("adBlockStatusText");
 
-	chrome.storage.local.get("blurRemovalEnabled", (data) => {
-		const isEnabled = data.blurRemovalEnabled !== false;
-		updateUI(isEnabled);
+	chrome.storage.local.get(["blurRemovalEnabled", "adBlockEnabled"], (data) => {
+		const isBlurRemovalEnabled = data.blurRemovalEnabled !== false;
+		const isAdBlockEnabled = data.adBlockEnabled !== false;
+
+		updateBlurUI(isBlurRemovalEnabled);
+		updateAdBlockUI(isAdBlockEnabled);
 	});
 
-	onButton.addEventListener("click", () => {
-		setEnabled(true);
+	blurOnButton.addEventListener("click", () => {
+		setBlurEnabled(true);
 	});
 
-	offButton.addEventListener("click", () => {
-		setEnabled(false);
+	blurOffButton.addEventListener("click", () => {
+		setBlurEnabled(false);
 	});
 
-	function setEnabled(isEnabled) {
+	adBlockOnButton.addEventListener("click", () => {
+		setAdBlockEnabled(true);
+	});
+
+	adBlockOffButton.addEventListener("click", () => {
+		setAdBlockEnabled(false);
+	});
+
+	function setBlurEnabled(isEnabled) {
 		chrome.storage.local.set({ blurRemovalEnabled: isEnabled });
-		updateUI(isEnabled);
+		updateBlurUI(isEnabled);
 
 		chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
 			if (tabs[0]) {
@@ -31,21 +48,49 @@ document.addEventListener("DOMContentLoaded", () => {
 		});
 	}
 
-	function updateUI(isEnabled) {
+	function setAdBlockEnabled(isEnabled) {
+		chrome.storage.local.set({ adBlockEnabled: isEnabled });
+		updateAdBlockUI(isEnabled);
+
+		chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+			if (tabs[0]) {
+				chrome.tabs.sendMessage(tabs[0].id, {
+					action: "toggleAdBlock",
+					enabled: isEnabled,
+				});
+			}
+		});
+	}
+
+	function updateBlurUI(isEnabled) {
 		if (isEnabled) {
-			onButton.classList.add("active");
-			offButton.classList.remove("active");
-
-			statusContainer.classList.add("status-on");
-			statusContainer.classList.remove("status-off");
-			statusText.textContent = "現在の状態: 有効";
+			blurOnButton.classList.add("active");
+			blurOffButton.classList.remove("active");
+			blurStatusContainer.classList.add("status-on");
+			blurStatusContainer.classList.remove("status-off");
+			blurStatusText.textContent = "ブラー除去: 有効";
 		} else {
-			offButton.classList.add("active");
-			onButton.classList.remove("active");
+			blurOffButton.classList.add("active");
+			blurOnButton.classList.remove("active");
+			blurStatusContainer.classList.add("status-off");
+			blurStatusContainer.classList.remove("status-on");
+			blurStatusText.textContent = "ブラー除去: 無効";
+		}
+	}
 
-			statusContainer.classList.add("status-off");
-			statusContainer.classList.remove("status-on");
-			statusText.textContent = "現在の状態: 無効";
+	function updateAdBlockUI(isEnabled) {
+		if (isEnabled) {
+			adBlockOnButton.classList.add("active");
+			adBlockOffButton.classList.remove("active");
+			adBlockStatusContainer.classList.add("status-on");
+			adBlockStatusContainer.classList.remove("status-off");
+			adBlockStatusText.textContent = "広告ブロック: 有効";
+		} else {
+			adBlockOffButton.classList.add("active");
+			adBlockOnButton.classList.remove("active");
+			adBlockStatusContainer.classList.add("status-off");
+			adBlockStatusContainer.classList.remove("status-on");
+			adBlockStatusText.textContent = "広告ブロック: 無効";
 		}
 	}
 });
