@@ -10,20 +10,20 @@ servers:
 paths:
   /reorder:
     post:
-      summary: reorder text
+      summary: reorder texts
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TextRequest'
+              $ref: '#/components/schemas/TextsRequest'
       responses:
         '200':
           description: success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextResponse'
+                $ref: '#/components/schemas/TextsResponse'
         '400':
           description: bad request
           content:
@@ -31,28 +31,31 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
-                error: "Missing 'text' field in request body"
+                error: "Missing 'texts' field in request body"
 
 components:
   schemas:
-    TextRequest:
+    TextsRequest:
       type: object
       required:
-        - text
+        - texts
       properties:
-        text:
-          type: string
-          example: olHel, rowld!
-    TextResponse:
+        texts:
+          type: array
+          items:
+            type: string
+          example: ["olHel", "rowld!"]
+    TextsResponse:
       type: object
       properties:
-        text:
-          type: string
-          example: Hello, world!
+        texts:
+          type: array
+          items:
+            type: string
+          example: ["Hello", "world!"]
     ErrorResponse:
       type: object
       properties:
         error:
           type: string
           example: "Some error occurred"
-
