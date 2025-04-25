@@ -28,7 +28,7 @@ func rewriteText(c echo.Context, text string) (string, error) {
 	client, err := genai.NewClient(context, option.WithAPIKey(os.Getenv("API_KEY")))
 	if err != nil {
 		log.Println(err)
-        return "", err
+		return "", err
 	}
 	defer client.Close()
 
@@ -39,7 +39,7 @@ func rewriteText(c echo.Context, text string) (string, error) {
 		genai.Text(fmt.Sprintf("以下の文章を自然な日本語に直してください。\n%s", text)),
 	)
 	if err != nil {
-        log.Println(err)
+		log.Println(err)
 		return "", err
 	}
 	var result string
