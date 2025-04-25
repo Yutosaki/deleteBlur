@@ -68,13 +68,13 @@ document.addEventListener("DOMContentLoaded", () => {
 			blurOffButton.classList.remove("active");
 			blurStatusContainer.classList.add("status-on");
 			blurStatusContainer.classList.remove("status-off");
-			blurStatusText.textContent = "ブラー除去: 有効";
+			blurStatusText.textContent = "ぼかし除去: 有効";
 		} else {
 			blurOffButton.classList.add("active");
 			blurOnButton.classList.remove("active");
 			blurStatusContainer.classList.add("status-off");
 			blurStatusContainer.classList.remove("status-on");
-			blurStatusText.textContent = "ブラー除去: 無効";
+			blurStatusText.textContent = "ぼかし除去: 無効";
 		}
 	}
 
