@@ -1,13 +1,12 @@
 package main
 
 import (
+	"deleteBlur/handler"
+	"deleteBlur/middleware"
 	"github.com/joho/godotenv"
-    "deleteBlur/middleware"
-    "log"
 	"github.com/labstack/echo/v4"
-    "deleteBlur/handler"
+	"log"
 )
-
 
 func main() {
 	err := godotenv.Load(".env")
@@ -15,8 +14,8 @@ func main() {
 		log.Println(err)
 		return
 	}
-    e := echo.New()
-    e.Use(middleware.SetupCORS(e))
+	e := echo.New()
+	e.Use(middleware.SetupCORS(e))
 	e.POST("/reorder", handler.ReorderHandler)
-    e.Logger.Fatal(e.Start(":8080"))
+	e.Logger.Fatal(e.Start(":8080"))
 }
