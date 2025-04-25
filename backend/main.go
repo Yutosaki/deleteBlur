@@ -6,13 +6,14 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"log"
+    "os"
 )
 
 func main() {
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Println(err)
-		return
+        os.Exit(1)
 	}
 	e := echo.New()
 	e.Use(middleware.SetupCORS(e))
