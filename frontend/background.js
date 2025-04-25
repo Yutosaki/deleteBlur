@@ -6,7 +6,7 @@ chrome.action.onClicked.addListener((tab) => {});
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 	if (changeInfo.status === "complete") {
-		chrome.storage.local.get("blurRemovalEnabled", function (data) {
+		chrome.storage.local.get("blurRemovalEnabled", (data) => {
 			if (data.blurRemovalEnabled !== false) {
 				chrome.scripting.executeScript({
 					target: { tabId: tabId },

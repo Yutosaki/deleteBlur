@@ -50,7 +50,7 @@ function removeBlur() {
 						if (response.ok) {
 							return response.json();
 						}
-						throw new Error("Response not OK: " + response.statusText);
+						throw new Error(`Response not OK: ${response.statusText}`);
 					})
 					.then((data) => {
 						if (data.texts && Array.isArray(data.texts)) {
@@ -73,14 +73,14 @@ function removeBlur() {
 	}
 }
 
-chrome.storage.local.get("blurRemovalEnabled", function (data) {
+chrome.storage.local.get("blurRemovalEnabled", (data) => {
 	const isEnabled = data.blurRemovalEnabled !== false;
 	if (isEnabled) {
 		removeBlur();
 	}
 });
 
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	if (request.action === "toggleBlurRemoval") {
 		if (request.enabled) {
 			removeBlur();
