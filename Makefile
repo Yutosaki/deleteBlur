@@ -18,7 +18,7 @@ down: ## Stop the application
 
 # Format Go code
 fmt: ## Format all Go code files
-	@go fmt backend/...
+	@gofmt -w .
 	@echo "$(GREEN)✅ Go code formatted successfully!$(RESET)"
 
 # Clean up Docker containers
