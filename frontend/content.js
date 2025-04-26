@@ -97,27 +97,6 @@ function hideAds() {
 			}
 		}
 
-		const script = document.createElement("script");
-		script.textContent = `
-                                    window.canRunAds = true;
-                                    window.adBlockerDetected = false;
-                                    window.isAdBlockActive = false;
-                                    
-                                    if (typeof adsbygoogle === 'undefined') {
-                                                    window.adsbygoogle = {
-                                                                    loaded: true,
-                                                                    push: function(obj) {
-                                                                                    if (obj && typeof obj.callback === 'function') {
-                                                                                                    setTimeout(obj.callback, 10);
-                                                                                    }
-                                                                                    return 1;
-                                                                    }
-                                                    };
-                                    }
-                    `;
-		document.head.appendChild(script);
-		document.head.removeChild(script);
-
 		window.adsAlreadyHidden = true;
 	});
 }
