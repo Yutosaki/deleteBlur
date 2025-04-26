@@ -1,3 +1,38 @@
+function removeBlur() {
+	for (const el of document.querySelectorAll(
+		'div[style*="position:absolute"], div[style*="z-index"]',
+	)) {
+		if (
+			el.innerText.includes("申し訳") ||
+			el.innerText.includes("メンバーシップ")
+		) {
+			el.remove();
+		}
+	}
+
+	const answerBlocks = document.querySelectorAll(".ansbg");
+	for (const block of answerBlocks) {
+		const blurredElements = block.querySelectorAll(
+			'div[style*="filter:blur"], div[style*="opacity"]',
+		);
+
+		if (blurredElements.length === 0) continue;
+
+		const texts = [];
+		for (const el of blurredElements) {
+			const text = el.innerText.trim();
+			if (text) texts.push(text);
+		}
+
+		for (const el of blurredElements) {
+			el.style.filter = "none";
+			el.style.opacity = "1";
+			el.style.userSelect = "text";
+			el.style.pointerEvents = "auto";
+		}
+	}
+}
+
 function hideAds() {
 	chrome.storage.local.get(["adBlockEnabled"], (data) => {
 		if (data.adBlockEnabled === false) {
@@ -64,22 +99,22 @@ function hideAds() {
 
 		const script = document.createElement("script");
 		script.textContent = `
-									window.canRunAds = true;
-									window.adBlockerDetected = false;
-									window.isAdBlockActive = false;
-									
-									if (typeof adsbygoogle === 'undefined') {
-													window.adsbygoogle = {
-																	loaded: true,
-																	push: function(obj) {
-																					if (obj && typeof obj.callback === 'function') {
-																									setTimeout(obj.callback, 10);
-																					}
-																					return 1;
-																	}
-													};
-									}
-					`;
+                                    window.canRunAds = true;
+                                    window.adBlockerDetected = false;
+                                    window.isAdBlockActive = false;
+                                    
+                                    if (typeof adsbygoogle === 'undefined') {
+                                                    window.adsbygoogle = {
+                                                                    loaded: true,
+                                                                    push: function(obj) {
+                                                                                    if (obj && typeof obj.callback === 'function') {
+                                                                                                    setTimeout(obj.callback, 10);
+                                                                                    }
+                                                                                    return 1;
+                                                                    }
+                                                    };
+                                    }
+                    `;
 		document.head.appendChild(script);
 		document.head.removeChild(script);
 
@@ -93,7 +128,6 @@ function showAds() {
 		adBlockStyles.remove();
 	}
 
-	// 処理済みの広告要素を元に戻す
 	const processedAds = document.querySelectorAll('[data-ad-processed="true"]');
 	for (const el of processedAds) {
 		el.style.visibility = "";
@@ -103,21 +137,39 @@ function showAds() {
 	window.adsAlreadyHidden = false;
 }
 
+function initializeExtension() {
+	chrome.storage.local.get(["adBlockEnabled"], (data) => {
+		if (data.adBlockEnabled !== false) {
+			hideAds();
+		} else {
+			showAds();
+		}
+	});
+
+	chrome.storage.local.get(["blurRemovalEnabled"], (data) => {
+		if (data.blurRemovalEnabled !== false) {
+			removeBlur();
+
+			setTimeout(removeBlur, 1000);
+		}
+	});
+}
+
 (() => {
 	chrome.storage.local.get(["adBlockEnabled"], (data) => {
 		if (data.adBlockEnabled !== false) {
 			const style = document.createElement("style");
 			style.id = "ad-block-style";
 			style.textContent = `
-													iframe[src*="ads"], iframe[src*="doubleclick"],
-													div[class*="ad"]:not([class*="応用情報"]):not(header *),
-													div[id*="ad"]:not([id*="応用情報"]):not(header *),
-													div[class*="banner"], div[class*="sponsor"]:not(header *),
-													ins.adsbygoogle, [data-ad-client],
-													div[aria-label*="広告"], img[src*="ads"], a[href*="doubleclick"] {
-																	opacity: 0 !important;
-													}
-									`;
+                                                    iframe[src*="ads"], iframe[src*="doubleclick"],
+                                                    div[class*="ad"]:not([class*="応用情報"]):not(header *),
+                                                    div[id*="ad"]:not([id*="応用情報"]):not(header *),
+                                                    div[class*="banner"], div[class*="sponsor"]:not(header *),
+                                                    ins.adsbygoogle, [data-ad-client],
+                                                    div[aria-label*="広告"], img[src*="ads"], a[href*="doubleclick"] {
+                                                                    opacity: 0 !important;
+                                                    }
+                                    `;
 			(document.head || document.documentElement).appendChild(style);
 		}
 	});
@@ -139,10 +191,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	return true;
 });
 
-chrome.storage.local.get(["adBlockEnabled"], (data) => {
-	if (data.adBlockEnabled !== false) {
-		hideAds();
-	} else {
-		showAds();
+if (document.readyState === "loading") {
+	document.addEventListener("DOMContentLoaded", initializeExtension);
+} else {
+	initializeExtension();
+}
+
+let lastUrl = location.href;
+const observer = new MutationObserver(() => {
+	if (location.href !== lastUrl) {
+		lastUrl = location.href;
+		setTimeout(initializeExtension, 500);
 	}
 });
+
+observer.observe(document, { subtree: true, childList: true });
