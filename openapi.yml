@@ -16,7 +16,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TextRequest'
+              type: array
+              items:
+                $ref: '#/components/schemas/TextRequest'
       responses:
         '200':
           description: success
