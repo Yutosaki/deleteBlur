@@ -44,13 +44,13 @@ components:
       properties:
         text:
           type: string
-          example: olHel, rowld!
+          example: は、報デ情ーとタリデテパィークデるす散にしタ記分 式をィ各ス方で録すて。1もが障故し台て、りリれクのデデ残さパティス録たにィ記ー っデタてを使ーこ可旧るで能タ復とあを、デー数ク格てをけ納のるめた複ィす分タにデス、時がセアスでに上よクのす特るすみとこすとり徴性が能こ書き同向る読。
     TextResponse:
       type: object
       properties:
         text:
           type: string
-          example: Hello, world!
+          example: 各パーティションに分散してデータを記録します。各データは複数のストレージに複製されるため、1台が故障してもデータ復旧が可能です。旧データも残っているため、必要に応じて過去のデータを利用できます。\n\nこの方式の特徴は、複数のパーティションにデータを分散して格納することで、アクセス時の負荷を分散できる点です。読み書きの性能向上が期待できます。\n
     ErrorResponse:
       type: object
       properties:
