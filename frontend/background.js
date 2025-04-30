@@ -1,11 +1,25 @@
-chrome.action.onClicked.addListener((tab) => {
-	chrome.scripting.executeScript({
-		target: { tabId: tab.id },
-		func: () => {
-			for (const el of document.querySelectorAll("*")) {
-				el.style.filter = "none";
-				el.style.opacity = "1";
-			}
-		},
+chrome.runtime.onInstalled.addListener(() => {
+	chrome.storage.local.set({
+		blurRemovalEnabled: true,
+		adBlockEnabled: true,
 	});
+});
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+	if (changeInfo.status === "complete") {
+		chrome.storage.local.get(
+			["blurRemovalEnabled", "adBlockEnabled"],
+			(data) => {
+				if (
+					data.blurRemovalEnabled !== false ||
+					data.adBlockEnabled !== false
+				) {
+					chrome.scripting.executeScript({
+						target: { tabId: tabId },
+						files: ["content.js"],
+					});
+				}
+			},
+		);
+	}
 });
