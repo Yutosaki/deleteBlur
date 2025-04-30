@@ -1,5 +1,5 @@
 package model
 
-type Text struct {
-	Text string `json:"text"`
+type Texts struct {
+	Texts []string `json:"texts"`
 }

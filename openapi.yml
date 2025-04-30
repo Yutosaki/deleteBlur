@@ -16,16 +16,14 @@ paths:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/TextRequest'
+              $ref: '#/components/schemas/TextsRequest'
       responses:
         '200':
           description: success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TextResponse'
+                $ref: '#/components/schemas/TextsResponse'
         '400':
           description: bad request
           content:
@@ -33,28 +31,39 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
               example:
-                error: "Missing 'text' field in request body"
+                error: "Invalid request format"
 
 components:
   schemas:
-    TextRequest:
+    TextsRequest:
       type: object
       required:
-        - text
+        - texts
       properties:
-        text:
-          type: string
-          example: は、報デ情ーとタリデテパィークデるす散にしタ記分 式をィ各ス方で録すて。1もが障故し台て、りリれクのデデ残さパティス録たにィ記ー っデタてを使ーこ可旧るで能タ復とあを、デー数ク格てをけ納のるめた複ィす分タにデス、時がセアスでに上よクのす特るすみとこすとり徴性が能こ書き同向る読。
-    TextResponse:
+        texts:
+          type: array
+          items:
+            type: string
+          example:
+            - "同一データベースに対する同一処理は，何度実行しても結果は同じである。き質回果実性もしじ性等とてる何行結べなを同(Idempotent)といすまい。ACIDま接がんれまに含せは特性直、連え性質貫関とま一言す性るすに。"
+            - "トランザクション完了後にハードウェア障害が発生しても，更新されたデータベースの内容は保証される。性のです続説明永。"
+            - "トランザクション内の処理は，全てが実行されるか，全てが取り消されるかのいずれかである正しい。性子は原、る可不証うンをる分保シよの特ントすク原すとでに性がで子ザあョこラ。行ザ部シとンンはクなるはさ分れに的ラョトこく実、操すがてる完了のすべか作、まてか戻終すらか作の操ちしに了どべすでがるの元。"
+            - "一つのトランザクションの処理結果は，他のトランザクション処理の影響を受けない。の性説立明独です。"
+    TextsResponse:
       type: object
       properties:
-        text:
-          type: string
-          example: 各パーティションに分散してデータを記録します。各データは複数のストレージに複製されるため、1台が故障してもデータ復旧が可能です。旧データも残っているため、必要に応じて過去のデータを利用できます。\n\nこの方式の特徴は、複数のパーティションにデータを分散して格納することで、アクセス時の負荷を分散できる点です。読み書きの性能向上が期待できます。\n
+        texts:
+          type: array
+          items:
+            type: string
+          example:
+            - "一つのトランザクションの処理結果は、他のトランザクション処理の影響を受けないという独立性が確立されています。\n"
+            - "同一のデータベースに対して同じ処理を何度実行しても、結果は必ず同じになります。このような性質を冪等性(Idempotent)と言います。ACID特性は、整合性、一貫性、独立性、耐久性というデータベース処理に求められる重要な性質を含んでいます。\n"
+            - "トランザクション完了後にハードウェア障害が発生しても、更新されたデータベースの内容は保証されます。\n"
+            - "トランザクション内の処理は、全て実行されるか、全て取り消されるかのいずれかである。トランザクションとは、一連の処理をまとめたものであり、全ての操作が完了するか、全ての操作が元の状態に戻るかのどちらかになることを保証する。部分的に実行されることはない。\n"
     ErrorResponse:
       type: object
       properties:
         error:
           type: string
           example: "Some error occurred"
-
