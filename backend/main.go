@@ -1,22 +1,22 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
+	"deleteBlur/handler"
+	"deleteBlur/middleware"
+	"github.com/joho/godotenv"
+	"github.com/labstack/echo/v4"
+	"log"
+	"os"
 )
 
-func handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Backend prototype is running!")
-}
-
-func serveOpenAPI(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "./openapi.yml")
-}
-
 func main() {
-	http.HandleFunc("/", handler)
-	http.HandleFunc("/docs/openapi.yml", serveOpenAPI)
-
-	fmt.Println("Listening on :8080")
-	http.ListenAndServe(":8080", nil)
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Println(err)
+		os.Exit(1)
+	}
+	e := echo.New()
+	e.Use(middleware.SetupCORS(e))
+	e.POST("/reorder", handler.ReorderHandler)
+	e.Logger.Fatal(e.Start(":8080"))
 }
