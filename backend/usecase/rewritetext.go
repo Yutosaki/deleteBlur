@@ -1,11 +1,12 @@
 package usecase
 
 import (
+	"context"
 	"deleteBlur/infrastructure"
 	"deleteBlur/model"
 	"github.com/labstack/echo/v4"
+	"strings"
 	"sync"
-	"context"
 )
 
 func RewriteText(c echo.Context, texts model.Texts) ([]string, error) {
@@ -21,7 +22,7 @@ func RewriteText(c echo.Context, texts model.Texts) ([]string, error) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-            // 他の後ルーチンで cancel() が呼ばれていた場合、終了させたいため、初めにチェックする
+			// 他の後ルーチンで cancel() が呼ばれていた場合、終了させたいため、初めにチェックする
 			select {
 			case <-ctx.Done():
 				return
@@ -37,11 +38,12 @@ func RewriteText(c echo.Context, texts model.Texts) ([]string, error) {
 				}
 				return
 			}
+			res = strings.TrimRight(res, "\n")
 			results[i] = res // ここで元の位置に格納する（localのindexが保持されているから、indexが更新されずに元の配列の順番のところに入る）
 		}()
 	}
 
-    // エラーが発生したら即時に受け取ってreturnしたいから、ゴルーチンで動かす
+	// エラーが発生したら即時に受け取ってreturnしたいから、ゴルーチンで動かす
 	go func() {
 		wg.Wait()
 		close(errCh)
