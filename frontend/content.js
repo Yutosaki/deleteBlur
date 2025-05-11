@@ -107,7 +107,7 @@ function collectAllTextNodes() {
 				false,
 			);
 
-			let node = textNodeWalker.nextNode();
+			const node = textNodeWalker.nextNode();
 			while (node) {
 				const text = node.textContent.trim();
 				if (text) {
