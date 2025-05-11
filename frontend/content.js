@@ -40,115 +40,175 @@ function removeBlur() {
 }
 
 function fixJumbledText() {
-	const answerBlocks = document.querySelectorAll(".ansbg");
-
-	for (const block of answerBlocks) {
-		const textElements = block.querySelectorAll(
-			'div[style*="opacity"], div[style*="filter"]',
-		);
-
-		if (textElements.length === 0) continue;
-
-		const texts = [];
-		for (const el of textElements) {
-			const text = el.innerText.trim();
-			if (text) texts.push(text);
+	chrome.storage.local.get(["textReorderEnabled"], (data) => {
+		if (data.textReorderEnabled === false) {
+			console.log("文章修正は無効に設定されています");
+			return;
 		}
 
-		if (texts.length === 0) continue;
+		console.log("文章修正を実行中...");
+
+		const textNodesInfo = collectAllTextNodes();
+
+		if (textNodesInfo.length === 0) return;
+
+		const textsToProcess = textNodesInfo.map((item) => item.text);
+
+		console.log(
+			"%c文章修正API送受信データ",
+			"background:blue;color:white;padding:2px 5px;",
+		);
+		console.log(
+			"送信データ:",
+			JSON.stringify({ texts: textsToProcess }, null, 2),
+		);
 
 		fetch("http://localhost:8080/reorder", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
 			},
-			body: JSON.stringify({ texts: texts }),
+			body: JSON.stringify({ texts: textsToProcess }),
 		})
 			.then((response) => response.json())
 			.then((data) => {
-				if (data.texts && data.texts.length > 0) {
-					// 結果を元のテキスト要素に挿入
-					let index = 0;
-					for (const el of textElements) {
-						if (index < data.texts.length) {
-							el.innerText = data.texts[index];
-							index++;
-						}
-					}
+				console.log("受信データ:", JSON.stringify(data, null, 2));
+
+				if (!data.texts || data.texts.length === 0) return;
+
+				for (
+					let i = 0;
+					i < data.texts.length && i < textNodesInfo.length;
+					i++
+				) {
+					textNodesInfo[i].node.textContent = data.texts[i];
 				}
 			})
 			.catch((error) => {
 				console.error("Error reordering text:", error);
 			});
+	});
+}
+
+function collectAllTextNodes() {
+	const allNodesInfo = [];
+
+	const answerBlocks = document.querySelectorAll(".ansbg");
+	for (const block of answerBlocks) {
+		const textElements = block.querySelectorAll(
+			'div[style*="opacity"], div[style*="filter"]',
+		);
+
+		for (const el of textElements) {
+			const textNodeWalker = document.createTreeWalker(
+				el,
+				NodeFilter.SHOW_TEXT,
+				null,
+				false,
+			);
+
+			let node;
+			while ((node = textNodeWalker.nextNode())) {
+				const text = node.textContent.trim();
+				if (text) {
+					allNodesInfo.push({
+						node: node,
+						text: text,
+						type: "answer",
+					});
+				}
+			}
+		}
+	}
+
+	const listItems = document.querySelectorAll("li.lia, li.lii, li.liu, li.lie");
+	for (const li of listItems) {
+		const citeElement = li.querySelector(".cite");
+		if (!citeElement) continue;
+
+		let brElement = null;
+		let node = citeElement.nextSibling;
+
+		while (node) {
+			if (node.nodeType === Node.ELEMENT_NODE && node.tagName === "BR") {
+				brElement = node;
+				break;
+			}
+			node = node.nextSibling;
+		}
+
+		if (!brElement) continue;
+
+		collectTextNodesAfterBr(brElement, allNodesInfo, "list");
 	}
 
 	const definitionLists = document.querySelectorAll("dl");
-
 	for (const dl of definitionLists) {
-		const dtElements = dl.querySelectorAll("dt");
-		const ddElements = dl.querySelectorAll("dd");
+		for (const dt of dl.querySelectorAll("dt")) {
+			collectElementTextNodes(dt, allNodesInfo, "definition");
+		}
+		for (const dd of dl.querySelectorAll("dd")) {
+			collectElementTextNodes(dd, allNodesInfo, "definition");
+		}
+	}
 
-		const dtTexts = [];
-		const ddTexts = [];
+	return allNodesInfo;
+}
 
-		for (const dt of dtElements) {
-			dtTexts.push(dt.innerText.trim());
+function collectTextNodesAfterBr(brElement, allNodesInfo, type) {
+	let currentNode = brElement.nextSibling;
+
+	while (currentNode) {
+		if (currentNode.nodeType === Node.ELEMENT_NODE) {
+			if (
+				currentNode.tagName === "BR" ||
+				currentNode.tagName === "IMG" ||
+				(currentNode.classList &&
+					(currentNode.classList.contains("img_margin") ||
+						currentNode.classList.contains("code")))
+			) {
+				break;
+			}
+
+			if (currentNode.tagName === "DIV" || currentNode.tagName === "SPAN") {
+				collectElementTextNodes(currentNode, allNodesInfo, type);
+				currentNode = currentNode.nextSibling;
+				continue;
+			}
 		}
 
-		for (const dd of ddElements) {
-			ddTexts.push(dd.innerText.trim());
-		}
-
-		if (dtTexts.length > 0) {
-			fetch("http://localhost:8080/reorder", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({ texts: dtTexts }),
-			})
-				.then((response) => response.json())
-				.then((data) => {
-					if (data.texts && data.texts.length > 0) {
-						// 結果をdt要素に挿入
-						let index = 0;
-						for (const dt of dtElements) {
-							if (index < data.texts.length) {
-								dt.innerText = data.texts[index];
-								index++;
-							}
-						}
-					}
-				})
-				.catch((error) => {
-					console.error("Error reordering dt texts:", error);
+		if (currentNode.nodeType === Node.TEXT_NODE) {
+			const text = currentNode.textContent.trim();
+			if (text) {
+				allNodesInfo.push({
+					node: currentNode,
+					text: text,
+					type: type,
 				});
+			}
 		}
 
-		if (ddTexts.length > 0) {
-			fetch("http://localhost:8080/reorder", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({ texts: ddTexts }),
-			})
-				.then((response) => response.json())
-				.then((data) => {
-					if (data.texts && data.texts.length > 0) {
-						// 結果をdd要素に挿入
-						let index = 0;
-						for (const dd of ddElements) {
-							if (index < data.texts.length) {
-								dd.innerText = data.texts[index];
-								index++;
-							}
-						}
-					}
-				})
-				.catch((error) => {
-					console.error("Error reordering dd texts:", error);
-				});
+		currentNode = currentNode.nextSibling;
+	}
+}
+
+function collectElementTextNodes(element, allNodesInfo, type) {
+	const textNodeWalker = document.createTreeWalker(
+		element,
+		NodeFilter.SHOW_TEXT,
+		null,
+		false,
+	);
+
+	let node;
+	while ((node = textNodeWalker.nextNode())) {
+		const text = node.textContent.trim();
+		if (text) {
+			allNodesInfo.push({
+				node: node,
+				text: text,
+				type: type,
+			});
 		}
 	}
 }
@@ -250,7 +310,6 @@ function initializeExtension() {
 		(data) => {
 			if (data.blurRemovalEnabled !== false) {
 				removeBlur();
-				setTimeout(removeBlur, 1000);
 			}
 
 			if (
@@ -258,7 +317,6 @@ function initializeExtension() {
 				data.blurRemovalEnabled === false
 			) {
 				fixJumbledText();
-				setTimeout(fixJumbledText, 1000);
 			}
 		},
 	);
@@ -270,52 +328,57 @@ function initializeExtension() {
 			const style = document.createElement("style");
 			style.id = "ad-block-style";
 			style.textContent = `
-                                                    iframe[src*="ads"], iframe[src*="doubleclick"],
-                                                    div[class*="ad"]:not([class*="応用情報"]):not(header *),
-                                                    div[id*="ad"]:not([id*="応用情報"]):not(header *),
-                                                    div[class*="banner"], div[class*="sponsor"]:not(header *),
-                                                    ins.adsbygoogle, [data-ad-client],
-                                                    div[aria-label*="広告"], img[src*="ads"], a[href*="doubleclick"] {
-                                                                    opacity: 0 !important;
-                                                    }
-                                    `;
+                iframe[src*="ads"], iframe[src*="doubleclick"],
+                div[class*="ad"]:not([class*="応用情報"]):not(header *),
+                div[id*="ad"]:not([id*="応用情報"]):not(header *),
+                div[class*="banner"], div[class*="sponsor"]:not(header *),
+                ins.adsbygoogle, [data-ad-client],
+                div[aria-label*="広告"], img[src*="ads"], a[href*="doubleclick"] {
+                    opacity: 0 !important;
+                }
+            `;
 			(document.head || document.documentElement).appendChild(style);
 		}
 	});
+
+	chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+		if (request.action === "toggleAdBlock") {
+			if (request.enabled) {
+				window.adsAlreadyHidden = false;
+				hideAds();
+			} else {
+				showAds();
+			}
+		} else if (request.action === "toggleBlurRemoval") {
+			if (request.enabled) {
+				removeBlur();
+			}
+		} else if (request.action === "toggleTextReorder") {
+			chrome.storage.local.set({ textReorderEnabled: request.enabled }, () => {
+				if (request.enabled) {
+					console.log("文章修正ボタンが押されました - 有効化");
+					fixJumbledText();
+				} else {
+					console.log("文章修正が無効化されました");
+				}
+			});
+		}
+		return true;
+	});
+
+	if (document.readyState === "loading") {
+		document.addEventListener("DOMContentLoaded", initializeExtension);
+	} else {
+		initializeExtension();
+	}
+
+	let lastUrl = location.href;
+	const observer = new MutationObserver(() => {
+		if (location.href !== lastUrl) {
+			lastUrl = location.href;
+			setTimeout(initializeExtension, 500);
+		}
+	});
+
+	observer.observe(document, { subtree: true, childList: true });
 })();
-
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-	if (request.action === "toggleAdBlock") {
-		if (request.enabled) {
-			window.adsAlreadyHidden = false;
-			hideAds();
-		} else {
-			showAds();
-		}
-	} else if (request.action === "toggleBlurRemoval") {
-		if (request.enabled) {
-			removeBlur();
-		}
-	} else if (request.action === "toggleTextReorder") {
-		if (request.enabled) {
-			fixJumbledText();
-		}
-	}
-	return true;
-});
-
-if (document.readyState === "loading") {
-	document.addEventListener("DOMContentLoaded", initializeExtension);
-} else {
-	initializeExtension();
-}
-
-let lastUrl = location.href;
-const observer = new MutationObserver(() => {
-	if (location.href !== lastUrl) {
-		lastUrl = location.href;
-		setTimeout(initializeExtension, 500);
-	}
-});
-
-observer.observe(document, { subtree: true, childList: true });
