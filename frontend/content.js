@@ -31,6 +31,126 @@ function removeBlur() {
 			el.style.pointerEvents = "auto";
 		}
 	}
+
+	chrome.storage.local.get(["textReorderEnabled"], (data) => {
+		if (data.textReorderEnabled !== false) {
+			fixJumbledText();
+		}
+	});
+}
+
+function fixJumbledText() {
+	const answerBlocks = document.querySelectorAll(".ansbg");
+
+	for (const block of answerBlocks) {
+		const textElements = block.querySelectorAll(
+			'div[style*="opacity"], div[style*="filter"]',
+		);
+
+		if (textElements.length === 0) continue;
+
+		const texts = [];
+		for (const el of textElements) {
+			const text = el.innerText.trim();
+			if (text) texts.push(text);
+		}
+
+		if (texts.length === 0) continue;
+
+		fetch("http://localhost:8080/reorder", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({ texts: texts }),
+		})
+			.then((response) => response.json())
+			.then((data) => {
+				if (data.texts && data.texts.length > 0) {
+					// 結果を元のテキスト要素に挿入
+					let index = 0;
+					for (const el of textElements) {
+						if (index < data.texts.length) {
+							el.innerText = data.texts[index];
+							index++;
+						}
+					}
+				}
+			})
+			.catch((error) => {
+				console.error("Error reordering text:", error);
+			});
+	}
+
+	const definitionLists = document.querySelectorAll("dl");
+
+	for (const dl of definitionLists) {
+		const dtElements = dl.querySelectorAll("dt");
+		const ddElements = dl.querySelectorAll("dd");
+
+		const dtTexts = [];
+		const ddTexts = [];
+
+		for (const dt of dtElements) {
+			dtTexts.push(dt.innerText.trim());
+		}
+
+		for (const dd of ddElements) {
+			ddTexts.push(dd.innerText.trim());
+		}
+
+		if (dtTexts.length > 0) {
+			fetch("http://localhost:8080/reorder", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ texts: dtTexts }),
+			})
+				.then((response) => response.json())
+				.then((data) => {
+					if (data.texts && data.texts.length > 0) {
+						// 結果をdt要素に挿入
+						let index = 0;
+						for (const dt of dtElements) {
+							if (index < data.texts.length) {
+								dt.innerText = data.texts[index];
+								index++;
+							}
+						}
+					}
+				})
+				.catch((error) => {
+					console.error("Error reordering dt texts:", error);
+				});
+		}
+
+		if (ddTexts.length > 0) {
+			fetch("http://localhost:8080/reorder", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ texts: ddTexts }),
+			})
+				.then((response) => response.json())
+				.then((data) => {
+					if (data.texts && data.texts.length > 0) {
+						// 結果をdd要素に挿入
+						let index = 0;
+						for (const dd of ddElements) {
+							if (index < data.texts.length) {
+								dd.innerText = data.texts[index];
+								index++;
+							}
+						}
+					}
+				})
+				.catch((error) => {
+					console.error("Error reordering dd texts:", error);
+				});
+		}
+	}
 }
 
 function hideAds() {
@@ -125,13 +245,23 @@ function initializeExtension() {
 		}
 	});
 
-	chrome.storage.local.get(["blurRemovalEnabled"], (data) => {
-		if (data.blurRemovalEnabled !== false) {
-			removeBlur();
+	chrome.storage.local.get(
+		["blurRemovalEnabled", "textReorderEnabled"],
+		(data) => {
+			if (data.blurRemovalEnabled !== false) {
+				removeBlur();
+				setTimeout(removeBlur, 1000);
+			}
 
-			setTimeout(removeBlur, 1000);
-		}
-	});
+			if (
+				data.textReorderEnabled !== false &&
+				data.blurRemovalEnabled === false
+			) {
+				fixJumbledText();
+				setTimeout(fixJumbledText, 1000);
+			}
+		},
+	);
 }
 
 (() => {
@@ -165,6 +295,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 	} else if (request.action === "toggleBlurRemoval") {
 		if (request.enabled) {
 			removeBlur();
+		}
+	} else if (request.action === "toggleTextReorder") {
+		if (request.enabled) {
+			fixJumbledText();
 		}
 	}
 	return true;
