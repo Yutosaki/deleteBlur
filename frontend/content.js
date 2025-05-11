@@ -200,7 +200,7 @@ function collectElementTextNodes(element, allNodesInfo, type) {
 		false,
 	);
 
-	let node = textNodeWalker.nextNode();
+	const node = textNodeWalker.nextNode();
 	while (node) {
 		const text = node.textContent.trim();
 		if (text) {
