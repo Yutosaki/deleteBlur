@@ -107,8 +107,8 @@ function collectAllTextNodes() {
 				false,
 			);
 
-			let node;
-			while ((node = textNodeWalker.nextNode())) {
+			let node = textNodeWalker.nextNode();
+			while (node) {
 				const text = node.textContent.trim();
 				if (text) {
 					allNodesInfo.push({
@@ -200,8 +200,8 @@ function collectElementTextNodes(element, allNodesInfo, type) {
 		false,
 	);
 
-	let node;
-	while ((node = textNodeWalker.nextNode())) {
+	let node = textNodeWalker.nextNode();
+	while (node) {
 		const text = node.textContent.trim();
 		if (text) {
 			allNodesInfo.push({
