@@ -6,14 +6,14 @@
 	"icons": {
 		"128": "icon.png"
 	},
-	"permissions": ["scripting", "activeTab", "storage"],
-	"host_permissions": ["<all_urls>"],
+	"permissions": ["scripting", "storage"],
+	"host_permissions": ["*://www.db-siken.com/*", "*://www.ap-siken.com/*"],
 	"background": {
 		"service_worker": "background.js"
 	},
 	"content_scripts": [
 		{
-			"matches": ["<all_urls>"],
+			"matches": ["*://www.db-siken.com/*", "*://www.ap-siken.com/*"],
 			"js": ["content.js"],
 			"run_at": "document_idle"
 		}
