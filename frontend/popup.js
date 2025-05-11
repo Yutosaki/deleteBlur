@@ -26,6 +26,20 @@ function setAdBlockEnabled(isEnabled) {
 	});
 }
 
+function setTextReorderEnabled(isEnabled) {
+	chrome.storage.local.set({ textReorderEnabled: isEnabled });
+	updateTextReorderUI(isEnabled);
+
+	chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+		if (tabs[0]) {
+			chrome.tabs.sendMessage(tabs[0].id, {
+				action: "toggleTextReorder",
+				enabled: isEnabled,
+			});
+		}
+	});
+}
+
 function updateBlurUI(isEnabled) {
 	if (!document.getElementById("blurOnButton")) return;
 
@@ -74,19 +88,53 @@ function updateAdBlockUI(isEnabled) {
 	}
 }
 
+function updateTextReorderUI(isEnabled) {
+	if (!document.getElementById("textReorderOnButton")) return;
+
+	const textReorderOnButton = document.getElementById("textReorderOnButton");
+	const textReorderOffButton = document.getElementById("textReorderOffButton");
+	const textReorderStatusContainer = document.getElementById(
+		"textReorderStatusContainer",
+	);
+	const textReorderStatusText = document.getElementById(
+		"textReorderStatusText",
+	);
+
+	if (isEnabled) {
+		textReorderOnButton.classList.add("active");
+		textReorderOffButton.classList.remove("active");
+		textReorderStatusContainer.classList.add("status-on");
+		textReorderStatusContainer.classList.remove("status-off");
+		textReorderStatusText.textContent = "文章修正: 有効";
+	} else {
+		textReorderOffButton.classList.add("active");
+		textReorderOnButton.classList.remove("active");
+		textReorderStatusContainer.classList.add("status-off");
+		textReorderStatusContainer.classList.remove("status-on");
+		textReorderStatusText.textContent = "文章修正: 無効";
+	}
+}
+
 document.addEventListener("DOMContentLoaded", () => {
 	const blurOnButton = document.getElementById("blurOnButton");
 	const blurOffButton = document.getElementById("blurOffButton");
 	const adBlockOnButton = document.getElementById("adBlockOnButton");
 	const adBlockOffButton = document.getElementById("adBlockOffButton");
+	const textReorderOnButton = document.getElementById("textReorderOnButton");
+	const textReorderOffButton = document.getElementById("textReorderOffButton");
 
-	chrome.storage.local.get(["blurRemovalEnabled", "adBlockEnabled"], (data) => {
-		const isBlurRemovalEnabled = data.blurRemovalEnabled !== false;
-		const isAdBlockEnabled = data.adBlockEnabled !== false;
+	chrome.storage.local.get(
+		["blurRemovalEnabled", "adBlockEnabled", "textReorderEnabled"],
+		(data) => {
+			const isBlurRemovalEnabled = data.blurRemovalEnabled !== false;
+			const isAdBlockEnabled = data.adBlockEnabled !== false;
+			const isTextReorderEnabled = data.textReorderEnabled !== false;
 
-		updateBlurUI(isBlurRemovalEnabled);
-		updateAdBlockUI(isAdBlockEnabled);
-	});
+			updateBlurUI(isBlurRemovalEnabled);
+			updateAdBlockUI(isAdBlockEnabled);
+			updateTextReorderUI(isTextReorderEnabled);
+		},
+	);
 
 	blurOnButton.addEventListener("click", () => {
 		setBlurEnabled(true);
@@ -102,5 +150,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
 	adBlockOffButton.addEventListener("click", () => {
 		setAdBlockEnabled(false);
+	});
+
+	textReorderOnButton.addEventListener("click", () => {
+		setTextReorderEnabled(true);
+	});
+
+	textReorderOffButton.addEventListener("click", () => {
+		setTextReorderEnabled(false);
 	});
 });
