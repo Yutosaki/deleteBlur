@@ -31,12 +31,6 @@ function removeBlur() {
 			el.style.pointerEvents = "auto";
 		}
 	}
-
-	chrome.storage.local.get(["textReorderEnabled"], (data) => {
-		if (data.textReorderEnabled !== false) {
-			fixJumbledText();
-		}
-	});
 }
 
 function fixJumbledText() {
@@ -283,41 +277,19 @@ function hideAds() {
 	});
 }
 
-function showAds() {
-	const adBlockStyles = document.querySelector("#ad-block-style");
-	if (adBlockStyles) {
-		adBlockStyles.remove();
-	}
-
-	const processedAds = document.querySelectorAll('[data-ad-processed="true"]');
-	for (const el of processedAds) {
-		el.style.visibility = "";
-		el.style.opacity = "";
-	}
-
-	window.adsAlreadyHidden = false;
-}
-
 function initializeExtension() {
-	chrome.storage.local.get(["adBlockEnabled"], (data) => {
-		if (data.adBlockEnabled !== false) {
-			hideAds();
-		} else {
-			showAds();
-		}
-	});
-
 	chrome.storage.local.get(
-		["blurRemovalEnabled", "textReorderEnabled"],
+		["blurRemovalEnabled", "textReorderEnabled", "adBlockEnabled"],
 		(data) => {
+			if (data.adBlockEnabled !== false) {
+				hideAds();
+			}
+
 			if (data.blurRemovalEnabled !== false) {
 				removeBlur();
 			}
 
-			if (
-				data.textReorderEnabled !== false &&
-				data.blurRemovalEnabled === false
-			) {
+			if (data.textReorderEnabled !== false) {
 				fixJumbledText();
 			}
 		},
@@ -367,12 +339,6 @@ function initializeExtension() {
 		}
 		return true;
 	});
-
-	if (document.readyState === "loading") {
-		document.addEventListener("DOMContentLoaded", initializeExtension);
-	} else {
-		initializeExtension();
-	}
 
 	let lastUrl = location.href;
 	const observer = new MutationObserver(() => {
