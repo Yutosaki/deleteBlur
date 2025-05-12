@@ -107,7 +107,7 @@ function collectAllTextNodes() {
 				false,
 			);
 
-			const node = textNodeWalker.nextNode();
+			let node = textNodeWalker.nextNode();
 			while (node) {
 				const text = node.textContent.trim();
 				if (text) {
@@ -117,6 +117,7 @@ function collectAllTextNodes() {
 						type: "answer",
 					});
 				}
+				node = textNodeWalker.nextNode();
 			}
 		}
 	}
@@ -200,7 +201,7 @@ function collectElementTextNodes(element, allNodesInfo, type) {
 		false,
 	);
 
-	const node = textNodeWalker.nextNode();
+	let node = textNodeWalker.nextNode();
 	while (node) {
 		const text = node.textContent.trim();
 		if (text) {
@@ -210,6 +211,7 @@ function collectElementTextNodes(element, allNodesInfo, type) {
 				type: type,
 			});
 		}
+		node = textNodeWalker.nextNode();
 	}
 }
 
