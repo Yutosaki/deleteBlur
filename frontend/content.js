@@ -320,25 +320,20 @@ function initializeExtension() {
 			if (request.enabled) {
 				window.adsAlreadyHidden = false;
 				hideAds();
-			} else {
-				showAds();
 			}
 		} else if (request.action === "toggleBlurRemoval") {
 			if (request.enabled) {
 				removeBlur();
 			}
 		} else if (request.action === "toggleTextReorder") {
-			chrome.storage.local.set({ textReorderEnabled: request.enabled }, () => {
-				if (request.enabled) {
-					console.log("文章修正ボタンが押されました - 有効化");
-					fixJumbledText();
-				} else {
-					console.log("文章修正が無効化されました");
-				}
-			});
+			if (request.enabled) {
+				fixJumbledText();
+			}
 		}
 		return true;
 	});
+
+	initializeExtension();
 
 	let lastUrl = location.href;
 	const observer = new MutationObserver(() => {
