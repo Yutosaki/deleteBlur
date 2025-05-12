@@ -30,14 +30,8 @@ func Requestgenai(c echo.Context, text string, modelName string) (string, error)
 		return "", err
 	}
 	var result string
-	for _, cand := range response.Candidates {
-		log.Println(cand.Content.Parts)
-		if cand.Content == nil {
-			continue
-		}
-		for _, part := range cand.Content.Parts {
-			result += fmt.Sprint(part)
-		}
+	for _, part := range response.Candidates[0].Content.Parts {
+		result += fmt.Sprintf("%v", part)
 	}
 	return result, nil
 }
