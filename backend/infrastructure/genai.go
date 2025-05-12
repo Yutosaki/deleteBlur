@@ -23,7 +23,7 @@ func Requestgenai(c echo.Context, text string, modelName string) (string, error)
 
 	response, err := model.GenerateContent(
 		context,
-		genai.Text(fmt.Sprintf("以下の文章を自然な日本語に直してください。\n整形した文章のみ出力してください\n%s", text)),
+		genai.Text(fmt.Sprintf("DBに関する試験の以下の文章の文字を並びかえて自然な日本語に直してください。その際に、**絶対に新しい文字を追加せず、並び替えのみで正しい文章に直してください。**\n整形した文章のみを出力してください\n%s", text)),
 	)
 	if err != nil {
 		log.Println(err)
