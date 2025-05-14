@@ -37,9 +37,9 @@ let isTextReorderingInProgress = false;
 
 function fixJumbledText() {
 	if (isTextReorderingInProgress) {
-        console.log("文章修正はすでに実行中です - 重複呼び出しをスキップします");
-        return;
-    }
+		console.log("文章修正はすでに実行中です - 重複呼び出しをスキップします");
+		return;
+	}
 
 	chrome.storage.local.get(["textReorderEnabled"], (data) => {
 		if (data.textReorderEnabled === false) {
@@ -47,7 +47,7 @@ function fixJumbledText() {
 			return;
 		}
 
-	    isTextReorderingInProgress = true;
+		isTextReorderingInProgress = true;
 		console.log("文章修正を実行中...");
 
 		const textNodesInfo = collectAllTextNodes();
