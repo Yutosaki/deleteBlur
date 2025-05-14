@@ -76,7 +76,11 @@ function fixJumbledText() {
 			.then((data) => {
 				console.log("受信データ:", JSON.stringify(data, null, 2));
 
-				if (!data.texts || data.texts.length === 0) return;
+				if (!data.texts || data.texts.length === 0) {
+					isTextReorderingInProgress = false;
+					return;
+				}
+
 
 				for (
 					let i = 0;
@@ -88,6 +92,7 @@ function fixJumbledText() {
 			})
 			.catch((error) => {
 				console.error("Error reordering text:", error);
+				isTextReorderingInProgress = false;	
 			});
 	});
 }
