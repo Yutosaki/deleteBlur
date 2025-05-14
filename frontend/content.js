@@ -33,13 +33,21 @@ function removeBlur() {
 	}
 }
 
+let isTextReorderingInProgress = false;
+
 function fixJumbledText() {
+	if (isTextReorderingInProgress) {
+        console.log("文章修正はすでに実行中です - 重複呼び出しをスキップします");
+        return;
+    }
+
 	chrome.storage.local.get(["textReorderEnabled"], (data) => {
 		if (data.textReorderEnabled === false) {
 			console.log("文章修正は無効に設定されています");
 			return;
 		}
 
+	    isTextReorderingInProgress = true;
 		console.log("文章修正を実行中...");
 
 		const textNodesInfo = collectAllTextNodes();
