@@ -81,7 +81,6 @@ function fixJumbledText() {
 					return;
 				}
 
-
 				for (
 					let i = 0;
 					i < data.texts.length && i < textNodesInfo.length;
@@ -92,7 +91,7 @@ function fixJumbledText() {
 			})
 			.catch((error) => {
 				console.error("Error reordering text:", error);
-				isTextReorderingInProgress = false;	
+				isTextReorderingInProgress = false;
 			});
 	});
 }

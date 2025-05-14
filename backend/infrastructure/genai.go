@@ -21,7 +21,7 @@ func Requestgenai(c echo.Context, text string, modelName string) (string, error)
 
 	model := client.GenerativeModel(modelName)
 
-	    prompt := fmt.Sprintf(`以下の文章の文字を並びかえて自然な日本語に直してください。その際に、絶対に文字を追加したり削除することはせずに、文字の並び替えのみで正しい日本語の文章に直してください。
+	prompt := fmt.Sprintf(`以下の文章の文字を並びかえて自然な日本語に直してください。その際に、絶対に文字を追加したり削除することはせずに、文字の並び替えのみで正しい日本語の文章に直してください。
 		また"、"や"。"などの間で区切られている文章の文字はその文章の区間内で並び替えてください。
 
 例：
