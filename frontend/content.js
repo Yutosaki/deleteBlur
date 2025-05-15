@@ -33,13 +33,21 @@ function removeBlur() {
 	}
 }
 
+let isTextReorderingInProgress = false;
+
 function fixJumbledText() {
+	if (isTextReorderingInProgress) {
+		console.log("文章修正はすでに実行中です - 重複呼び出しをスキップします");
+		return;
+	}
+
 	chrome.storage.local.get(["textReorderEnabled"], (data) => {
 		if (data.textReorderEnabled === false) {
 			console.log("文章修正は無効に設定されています");
 			return;
 		}
 
+		isTextReorderingInProgress = true;
 		console.log("文章修正を実行中...");
 
 		const textNodesInfo = collectAllTextNodes();
@@ -68,7 +76,10 @@ function fixJumbledText() {
 			.then((data) => {
 				console.log("受信データ:", JSON.stringify(data, null, 2));
 
-				if (!data.texts || data.texts.length === 0) return;
+				if (!data.texts || data.texts.length === 0) {
+					isTextReorderingInProgress = false;
+					return;
+				}
 
 				for (
 					let i = 0;
@@ -80,6 +91,7 @@ function fixJumbledText() {
 			})
 			.catch((error) => {
 				console.error("Error reordering text:", error);
+				isTextReorderingInProgress = false;
 			});
 	});
 }

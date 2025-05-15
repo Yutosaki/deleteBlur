@@ -21,9 +21,19 @@ func Requestgenai(c echo.Context, text string, modelName string) (string, error)
 
 	model := client.GenerativeModel(modelName)
 
+	prompt := fmt.Sprintf(`以下の文章の文字を並びかえて自然な日本語に直してください。その際に、絶対に文字を追加したり削除することはせずに、文字の並び替えのみで正しい日本語の文章に直してください。
+		また"、"や"。"などの間で区切られている文章の文字はその文章の区間内で並び替えてください。
+
+例：
+（質問）：ドッデはロクッ、能占順可の有源なすあす生がるる合りまに性資発場序異が。に記は述「デ全てラン対シ象トンザョのがクーッすロク一をタの定序順で」あるめたと、し生デせドッロクッんは発ま。
+（回答）：デッドロックは、資源の占有順序が異なる場合に発生する可能性があります。記述には「全てのトランザクションがロック対象のデータを一定の順序で」とあるため、デッドロックは発生しません。
+
+整形した文章のみを出力してください：
+%s`, text)
+
 	response, err := model.GenerateContent(
 		context,
-		genai.Text(fmt.Sprintf("DBに関する試験の以下の文章の文字を並びかえて自然な日本語に直してください。その際に、**絶対に新しい文字を追加せず、並び替えのみで正しい文章に直してください。**\n整形した文章のみを出力してください\n%s", text)),
+		genai.Text(prompt),
 	)
 	if err != nil {
 		log.Println(err)

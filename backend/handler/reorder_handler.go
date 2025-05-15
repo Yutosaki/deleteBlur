@@ -4,6 +4,7 @@ import (
 	"deleteBlur/model"
 	"deleteBlur/usecase"
 	"github.com/labstack/echo/v4"
+	"log"
 	"net/http"
 )
 
@@ -14,6 +15,7 @@ func ReorderHandler(c echo.Context) error {
 	}
 	result, err := usecase.RewriteText(c, texts)
 	if err != nil {
+		log.Println(err)
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "テキストの修正に失敗しました"})
 	}
 	return c.JSON(http.StatusOK, model.Texts{Texts: result})
