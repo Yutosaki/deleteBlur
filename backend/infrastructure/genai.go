@@ -30,6 +30,10 @@ func Requestgenai(c echo.Context, text string, modelName string) (string, error)
 		return "", err
 	}
 	var result string
+	if len(response.Candidates) == 0 {
+		log.Println("レスポンスを取得できませんでした")
+		return "", fmt.Errorf("レスポンスを取得できませんでした")
+	}
 	for _, part := range response.Candidates[0].Content.Parts {
 		result += fmt.Sprintf("%v", part)
 	}
