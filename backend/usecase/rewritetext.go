@@ -10,7 +10,7 @@ import (
 )
 
 func RewriteText(c echo.Context, texts model.Texts) ([]string, error) {
-	modelName := "gemini-2.0-flash-lite"
+	modelName := "gemini-2.0-flash"
 	results := make([]string, len(texts.Texts))
 	var wg sync.WaitGroup
 	errCh := make(chan error)
