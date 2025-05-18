@@ -33,6 +33,196 @@ function removeBlur() {
 	}
 }
 
+(() => {
+	let isTextReorderingInProgress = false;
+
+	function fixJumbledText() {
+		if (isTextReorderingInProgress) {
+			console.log("文章修正はすでに実行中です - 重複呼び出しをスキップします");
+			return;
+		}
+
+		chrome.storage.local.get(["textReorderEnabled"], (data) => {
+			if (data.textReorderEnabled === false) {
+				console.log("文章修正は無効に設定されています");
+				return;
+			}
+
+			isTextReorderingInProgress = true;
+			console.log("文章修正を実行中...");
+
+			const textNodesInfo = collectAllTextNodes();
+
+			if (textNodesInfo.length === 0) return;
+
+			const textsToProcess = textNodesInfo.map((item) => item.text);
+
+			console.log(
+				"%c文章修正API送受信データ",
+				"background:blue;color:white;padding:2px 5px;",
+			);
+			console.log(
+				"送信データ:",
+				JSON.stringify({ texts: textsToProcess }, null, 2),
+			);
+
+			fetch("http://localhost:8080/reorder", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ texts: textsToProcess }),
+			})
+				.then((response) => response.json())
+				.then((data) => {
+					console.log("受信データ:", JSON.stringify(data, null, 2));
+
+					if (!data.texts || data.texts.length === 0) {
+						isTextReorderingInProgress = false;
+						return;
+					}
+
+					for (
+						let i = 0;
+						i < data.texts.length && i < textNodesInfo.length;
+						i++
+					) {
+						textNodesInfo[i].node.textContent = data.texts[i];
+					}
+				})
+				.catch((error) => {
+					console.error("Error reordering text:", error);
+					isTextReorderingInProgress = false;
+				});
+		});
+	}
+})();
+
+function collectAllTextNodes() {
+	const allNodesInfo = [];
+
+	const answerBlocks = document.querySelectorAll(".ansbg");
+	for (const block of answerBlocks) {
+		const textElements = block.querySelectorAll(
+			'div[style*="opacity"], div[style*="filter"]',
+		);
+
+		for (const el of textElements) {
+			const textNodeWalker = document.createTreeWalker(
+				el,
+				NodeFilter.SHOW_TEXT,
+				null,
+				false,
+			);
+
+			let node = textNodeWalker.nextNode();
+			while (node) {
+				const text = node.textContent.trim();
+				if (text) {
+					allNodesInfo.push({
+						node: node,
+						text: text,
+						type: "answer",
+					});
+				}
+				node = textNodeWalker.nextNode();
+			}
+		}
+	}
+
+	const listItems = document.querySelectorAll("li.lia, li.lii, li.liu, li.lie");
+	for (const li of listItems) {
+		const citeElement = li.querySelector(".cite");
+		if (!citeElement) continue;
+
+		let brElement = null;
+		let node = citeElement.nextSibling;
+
+		while (node) {
+			if (node.nodeType === Node.ELEMENT_NODE && node.tagName === "BR") {
+				brElement = node;
+				break;
+			}
+			node = node.nextSibling;
+		}
+
+		if (!brElement) continue;
+
+		collectTextNodesAfterBr(brElement, allNodesInfo, "list");
+	}
+
+	const definitionLists = document.querySelectorAll("dl");
+	for (const dl of definitionLists) {
+		for (const dt of dl.querySelectorAll("dt")) {
+			collectElementTextNodes(dt, allNodesInfo, "definition");
+		}
+		for (const dd of dl.querySelectorAll("dd")) {
+			collectElementTextNodes(dd, allNodesInfo, "definition");
+		}
+	}
+
+	return allNodesInfo;
+}
+
+function collectTextNodesAfterBr(brElement, allNodesInfo, type) {
+	let currentNode = brElement.nextSibling;
+
+	while (currentNode) {
+		if (currentNode.nodeType === Node.ELEMENT_NODE) {
+			if (
+				currentNode.tagName === "BR" ||
+				currentNode.tagName === "IMG" ||
+				(currentNode.classList &&
+					(currentNode.classList.contains("img_margin") ||
+						currentNode.classList.contains("code")))
+			) {
+				break;
+			}
+
+			if (currentNode.tagName === "DIV" || currentNode.tagName === "SPAN") {
+				collectElementTextNodes(currentNode, allNodesInfo, type);
+				currentNode = currentNode.nextSibling;
+				continue;
+			}
+		}
+
+		if (currentNode.nodeType === Node.TEXT_NODE) {
+			const text = currentNode.textContent.trim();
+			if (text) {
+				allNodesInfo.push({
+					node: currentNode,
+					text: text,
+					type: type,
+				});
+			}
+		}
+
+		currentNode = currentNode.nextSibling;
+	}
+}
+
+function collectElementTextNodes(element, allNodesInfo, type) {
+	const textNodeWalker = document.createTreeWalker(
+		element,
+		NodeFilter.SHOW_TEXT,
+		null,
+		false,
+	);
+
+	let node = textNodeWalker.nextNode();
+	while (node) {
+		const text = node.textContent.trim();
+		if (text) {
+			allNodesInfo.push({
+				node: node,
+				text: text,
+				type: type,
+			});
+		}
+		node = textNodeWalker.nextNode();
+	}
+}
+
 function hideAds() {
 	chrome.storage.local.get(["adBlockEnabled"], (data) => {
 		if (data.adBlockEnabled === false) {
@@ -101,37 +291,23 @@ function hideAds() {
 	});
 }
 
-function showAds() {
-	const adBlockStyles = document.querySelector("#ad-block-style");
-	if (adBlockStyles) {
-		adBlockStyles.remove();
-	}
-
-	const processedAds = document.querySelectorAll('[data-ad-processed="true"]');
-	for (const el of processedAds) {
-		el.style.visibility = "";
-		el.style.opacity = "";
-	}
-
-	window.adsAlreadyHidden = false;
-}
-
 function initializeExtension() {
-	chrome.storage.local.get(["adBlockEnabled"], (data) => {
-		if (data.adBlockEnabled !== false) {
-			hideAds();
-		} else {
-			showAds();
-		}
-	});
+	chrome.storage.local.get(
+		["blurRemovalEnabled", "textReorderEnabled", "adBlockEnabled"],
+		(data) => {
+			if (data.adBlockEnabled !== false) {
+				hideAds();
+			}
 
-	chrome.storage.local.get(["blurRemovalEnabled"], (data) => {
-		if (data.blurRemovalEnabled !== false) {
-			removeBlur();
+			if (data.blurRemovalEnabled !== false) {
+				removeBlur();
+			}
 
-			setTimeout(removeBlur, 1000);
-		}
-	});
+			if (data.textReorderEnabled !== false) {
+				fixJumbledText();
+			}
+		},
+	);
 }
 
 (() => {
@@ -140,48 +316,46 @@ function initializeExtension() {
 			const style = document.createElement("style");
 			style.id = "ad-block-style";
 			style.textContent = `
-                                                    iframe[src*="ads"], iframe[src*="doubleclick"],
-                                                    div[class*="ad"]:not([class*="応用情報"]):not(header *),
-                                                    div[id*="ad"]:not([id*="応用情報"]):not(header *),
-                                                    div[class*="banner"], div[class*="sponsor"]:not(header *),
-                                                    ins.adsbygoogle, [data-ad-client],
-                                                    div[aria-label*="広告"], img[src*="ads"], a[href*="doubleclick"] {
-                                                                    opacity: 0 !important;
-                                                    }
-                                    `;
+                iframe[src*="ads"], iframe[src*="doubleclick"],
+                div[class*="ad"]:not([class*="応用情報"]):not(header *),
+                div[id*="ad"]:not([id*="応用情報"]):not(header *),
+                div[class*="banner"], div[class*="sponsor"]:not(header *),
+                ins.adsbygoogle, [data-ad-client],
+                div[aria-label*="広告"], img[src*="ads"], a[href*="doubleclick"] {
+                    opacity: 0 !important;
+                }
+            `;
 			(document.head || document.documentElement).appendChild(style);
 		}
 	});
-})();
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-	if (request.action === "toggleAdBlock") {
-		if (request.enabled) {
-			window.adsAlreadyHidden = false;
-			hideAds();
-		} else {
-			showAds();
+	chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+		if (request.action === "toggleAdBlock") {
+			if (request.enabled) {
+				window.adsAlreadyHidden = false;
+				hideAds();
+			}
+		} else if (request.action === "toggleBlurRemoval") {
+			if (request.enabled) {
+				removeBlur();
+			}
+		} else if (request.action === "toggleTextReorder") {
+			if (request.enabled) {
+				fixJumbledText();
+			}
 		}
-	} else if (request.action === "toggleBlurRemoval") {
-		if (request.enabled) {
-			removeBlur();
-		}
-	}
-	return true;
-});
+		return true;
+	});
 
-if (document.readyState === "loading") {
-	document.addEventListener("DOMContentLoaded", initializeExtension);
-} else {
 	initializeExtension();
-}
 
-let lastUrl = location.href;
-const observer = new MutationObserver(() => {
-	if (location.href !== lastUrl) {
-		lastUrl = location.href;
-		setTimeout(initializeExtension, 500);
-	}
-});
+	let lastUrl = location.href;
+	const observer = new MutationObserver(() => {
+		if (location.href !== lastUrl) {
+			lastUrl = location.href;
+			setTimeout(initializeExtension, 500);
+		}
+	});
 
-observer.observe(document, { subtree: true, childList: true });
+	observer.observe(document, { subtree: true, childList: true });
+})();

@@ -34,6 +34,11 @@
       justify-content: space-between;
       margin-top: 5px;
     }
+    .toggle-container {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 5px;
+    }
     button {
       padding: 8px 15px;
       border: none;
@@ -72,6 +77,10 @@
   <div id="adBlockStatusContainer" class="status-container">
     <span id="adBlockStatusText">広告ブロック: 確認中...</span>
   </div>
+
+  <div id="textReorderStatusContainer" class="status-container">
+    <span id="textReorderStatusText">文章修正: 確認中...</span>
+  </div>
   
   <div class="features">
     <div class="feature-title">ぼかし除去</div>
@@ -84,6 +93,12 @@
     <div class="button-container">
       <button id="adBlockOnButton" class="on-button">ON</button>
       <button id="adBlockOffButton" class="off-button">OFF</button>
+    </div>
+
+    <div class="feature-title">文章修正</div>
+    <div class="toggle-container">
+        <button id="textReorderOnButton" class="on-button">ON</button>
+        <button id="textReorderOffButton" class="off-button">OFF</button>
     </div>
   </div>
   
