@@ -47,6 +47,7 @@ func Requestgenai(c echo.Context, text string, modelName string) (string, error)
         %s
 
         ✅ チェックリスト
+        - [ ] 【回答欄】以外を編集していない
         - [ ] 各行が IT 試験で出る “意味の通る日本語” になった
         - [ ] 材料の文字・記号を **1 つも余さず** 使った
         - [ ] 行数と順番を入力と一致させた

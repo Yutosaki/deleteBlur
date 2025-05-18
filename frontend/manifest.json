@@ -7,7 +7,11 @@
 		"128": "icon.png"
 	},
 	"permissions": ["scripting", "storage"],
-	"host_permissions": ["*://www.db-siken.com/*", "*://www.ap-siken.com/*"],
+	"host_permissions": [
+		"*://www.db-siken.com/*",
+		"*://www.ap-siken.com/*",
+		"http//localhost:8080/*"
+	],
 	"background": {
 		"service_worker": "background.js"
 	},

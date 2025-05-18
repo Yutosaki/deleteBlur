@@ -33,68 +33,70 @@ function removeBlur() {
 	}
 }
 
-let isTextReorderingInProgress = false;
+(() => {
+	let isTextReorderingInProgress = false;
 
-function fixJumbledText() {
-	if (isTextReorderingInProgress) {
-		console.log("文章修正はすでに実行中です - 重複呼び出しをスキップします");
-		return;
-	}
-
-	chrome.storage.local.get(["textReorderEnabled"], (data) => {
-		if (data.textReorderEnabled === false) {
-			console.log("文章修正は無効に設定されています");
+	function fixJumbledText() {
+		if (isTextReorderingInProgress) {
+			console.log("文章修正はすでに実行中です - 重複呼び出しをスキップします");
 			return;
 		}
 
-		isTextReorderingInProgress = true;
-		console.log("文章修正を実行中...");
+		chrome.storage.local.get(["textReorderEnabled"], (data) => {
+			if (data.textReorderEnabled === false) {
+				console.log("文章修正は無効に設定されています");
+				return;
+			}
 
-		const textNodesInfo = collectAllTextNodes();
+			isTextReorderingInProgress = true;
+			console.log("文章修正を実行中...");
 
-		if (textNodesInfo.length === 0) return;
+			const textNodesInfo = collectAllTextNodes();
 
-		const textsToProcess = textNodesInfo.map((item) => item.text);
+			if (textNodesInfo.length === 0) return;
 
-		console.log(
-			"%c文章修正API送受信データ",
-			"background:blue;color:white;padding:2px 5px;",
-		);
-		console.log(
-			"送信データ:",
-			JSON.stringify({ texts: textsToProcess }, null, 2),
-		);
+			const textsToProcess = textNodesInfo.map((item) => item.text);
 
-		fetch("http://localhost:8080/reorder", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify({ texts: textsToProcess }),
-		})
-			.then((response) => response.json())
-			.then((data) => {
-				console.log("受信データ:", JSON.stringify(data, null, 2));
+			console.log(
+				"%c文章修正API送受信データ",
+				"background:blue;color:white;padding:2px 5px;",
+			);
+			console.log(
+				"送信データ:",
+				JSON.stringify({ texts: textsToProcess }, null, 2),
+			);
 
-				if (!data.texts || data.texts.length === 0) {
-					isTextReorderingInProgress = false;
-					return;
-				}
-
-				for (
-					let i = 0;
-					i < data.texts.length && i < textNodesInfo.length;
-					i++
-				) {
-					textNodesInfo[i].node.textContent = data.texts[i];
-				}
+			fetch("http://localhost:8080/reorder", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ texts: textsToProcess }),
 			})
-			.catch((error) => {
-				console.error("Error reordering text:", error);
-				isTextReorderingInProgress = false;
-			});
-	});
-}
+				.then((response) => response.json())
+				.then((data) => {
+					console.log("受信データ:", JSON.stringify(data, null, 2));
+
+					if (!data.texts || data.texts.length === 0) {
+						isTextReorderingInProgress = false;
+						return;
+					}
+
+					for (
+						let i = 0;
+						i < data.texts.length && i < textNodesInfo.length;
+						i++
+					) {
+						textNodesInfo[i].node.textContent = data.texts[i];
+					}
+				})
+				.catch((error) => {
+					console.error("Error reordering text:", error);
+					isTextReorderingInProgress = false;
+				});
+		});
+	}
+})();
 
 function collectAllTextNodes() {
 	const allNodesInfo = [];
