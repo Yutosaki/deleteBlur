@@ -55,7 +55,7 @@ function fixJumbledText() {
 
 		if (textNodesInfo.length === 0) {
 			console.log("修正対象のテキストが見つかりませんでした");
-			isTextReorderingInProgress = false;
+			window.textReorderState.inProgress = false;
 			return;
 		}
 
@@ -65,7 +65,7 @@ function fixJumbledText() {
 			processBatchTexts(textNodesInfo, 0);
 		} else {
 			processTexts(textNodesInfo, textsToProcess, () => {
-				isTextReorderingInProgress = false;
+				window.textReorderState.inProgress = false;
 			});
 		}
 	});
@@ -74,7 +74,7 @@ function fixJumbledText() {
 function processBatchTexts(allNodesInfo, startIndex) {
 	if (startIndex >= allNodesInfo.length) {
 		console.log("全てのバッチ処理が完了しました");
-		isTextReorderingInProgress = false;
+		window.textReorderState.inProgress = false;
 		return;
 	}
 
@@ -97,7 +97,7 @@ function processBatchTexts(allNodesInfo, startIndex) {
 			}, 60000);
 		} else {
 			console.log("全ての処理が完了しました");
-			isTextReorderingInProgress = false;
+			window.textReorderState.inProgress = false;
 		}
 	});
 }
@@ -139,7 +139,7 @@ function processTexts(nodesInfo, textsToProcess, callback) {
 
 			// エラーが発生しても次のバッチに進む
 			if (callback) callback();
-			else isTextReorderingInProgress = false;
+			else window.textReorderState.inProgress = false;
 		});
 }
 
