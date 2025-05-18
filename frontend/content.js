@@ -89,7 +89,7 @@ function processBatchTexts(allNodesInfo, startIndex) {
 	processTexts(currentBatch, textsToProcess, () => {
 		// 処理が成功しても失敗しても次のバッチに進む
 		if (endIndex < allNodesInfo.length) {
-			console.log(`次のバッチを1分後に処理します...`);
+			console.log("次のバッチを1分後に処理します...");
 			showBatchProgress(endIndex, allNodesInfo.length);
 
 			setTimeout(() => {
