@@ -33,70 +33,156 @@ function removeBlur() {
 	}
 }
 
-(() => {
-	let isTextReorderingInProgress = false;
+window.textReorderState = window.textReorderState || {
+	inProgress: false,
+};
+function fixJumbledText() {
+	if (window.textReorderState.inProgress) {
+		console.log("文章修正はすでに実行中です - 重複呼び出しをスキップします");
+		return;
+	}
 
-	function fixJumbledText() {
-		if (isTextReorderingInProgress) {
-			console.log("文章修正はすでに実行中です - 重複呼び出しをスキップします");
+	chrome.storage.local.get(["textReorderEnabled"], (data) => {
+		if (data.textReorderEnabled === false) {
+			console.log("文章修正は無効に設定されています");
 			return;
 		}
 
-		chrome.storage.local.get(["textReorderEnabled"], (data) => {
-			if (data.textReorderEnabled === false) {
-				console.log("文章修正は無効に設定されています");
+		window.textReorderState.inProgress = true;
+		console.log("文章修正を実行中...");
+
+		const textNodesInfo = collectAllTextNodes();
+
+		if (textNodesInfo.length === 0) {
+			console.log("修正対象のテキストが見つかりませんでした");
+			window.textReorderState.inProgress = false;
+			return;
+		}
+
+		const textsToProcess = textNodesInfo.map((item) => item.text);
+
+		if (textsToProcess.length > 15) {
+			processBatchTexts(textNodesInfo, 0);
+		} else {
+			processTexts(textNodesInfo, textsToProcess, () => {
+				window.textReorderState.inProgress = false;
+			});
+		}
+	});
+}
+
+function processBatchTexts(allNodesInfo, startIndex) {
+	if (startIndex >= allNodesInfo.length) {
+		console.log("全てのバッチ処理が完了しました");
+		window.textReorderState.inProgress = false;
+		return;
+	}
+
+	const endIndex = Math.min(startIndex + 15, allNodesInfo.length);
+	const currentBatch = allNodesInfo.slice(startIndex, endIndex);
+	const textsToProcess = currentBatch.map((item) => item.text);
+
+	console.log(
+		`バッチ処理: ${startIndex + 1}〜${endIndex}/${allNodesInfo.length}`,
+	);
+
+	processTexts(currentBatch, textsToProcess, () => {
+		// 処理が成功しても失敗しても次のバッチに進む
+		if (endIndex < allNodesInfo.length) {
+			console.log("次のバッチを1分後に処理します...");
+			showBatchProgress(endIndex, allNodesInfo.length);
+
+			setTimeout(() => {
+				processBatchTexts(allNodesInfo, endIndex);
+			}, 60000);
+		} else {
+			console.log("全ての処理が完了しました");
+			window.textReorderState.inProgress = false;
+		}
+	});
+}
+
+function processTexts(nodesInfo, textsToProcess, callback) {
+	console.log(
+		"%c文章修正API送受信データ",
+		"background:blue;color:white;padding:2px 5px;",
+	);
+	console.log(
+		"送信データ:",
+		JSON.stringify({ texts: textsToProcess }, null, 2),
+	);
+
+	fetch("http://localhost:8080/reorder", {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify({ texts: textsToProcess }),
+	})
+		.then((response) => response.json())
+		.then((data) => {
+			console.log("受信データ:", JSON.stringify(data, null, 2));
+
+			if (!data.texts || data.texts.length === 0) {
+				if (callback) callback();
 				return;
 			}
 
-			isTextReorderingInProgress = true;
-			console.log("文章修正を実行中...");
+			for (let i = 0; i < data.texts.length && i < nodesInfo.length; i++) {
+				nodesInfo[i].node.textContent = data.texts[i];
+			}
 
-			const textNodesInfo = collectAllTextNodes();
+			if (callback) callback();
+		})
+		.catch((error) => {
+			console.error("Error reordering text:", error);
 
-			if (textNodesInfo.length === 0) return;
-
-			const textsToProcess = textNodesInfo.map((item) => item.text);
-
-			console.log(
-				"%c文章修正API送受信データ",
-				"background:blue;color:white;padding:2px 5px;",
-			);
-			console.log(
-				"送信データ:",
-				JSON.stringify({ texts: textsToProcess }, null, 2),
-			);
-
-			fetch("http://localhost:8080/reorder", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({ texts: textsToProcess }),
-			})
-				.then((response) => response.json())
-				.then((data) => {
-					console.log("受信データ:", JSON.stringify(data, null, 2));
-
-					if (!data.texts || data.texts.length === 0) {
-						isTextReorderingInProgress = false;
-						return;
-					}
-
-					for (
-						let i = 0;
-						i < data.texts.length && i < textNodesInfo.length;
-						i++
-					) {
-						textNodesInfo[i].node.textContent = data.texts[i];
-					}
-				})
-				.catch((error) => {
-					console.error("Error reordering text:", error);
-					isTextReorderingInProgress = false;
-				});
+			// エラーが発生しても次のバッチに進む
+			if (callback) callback();
+			else window.textReorderState.inProgress = false;
 		});
+}
+
+function showBatchProgress(current, total) {
+	const progressContainer = document.createElement("div");
+	progressContainer.id = "text-reorder-progress";
+	progressContainer.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 10px 15px;
+        border-radius: 5px;
+        z-index: 10000;
+        font-family: sans-serif;
+    `;
+
+	progressContainer.innerHTML = `
+        <div>文章修正処理中: ${current}/${total}</div>
+        <div>次のバッチまでの残り時間: <span id="batch-countdown">60</span>秒</div>
+    `;
+
+	const existingProgress = document.getElementById("text-reorder-progress");
+	if (existingProgress) {
+		existingProgress.remove();
 	}
-})();
+
+	document.body.appendChild(progressContainer);
+
+	let seconds = 60;
+	const countdownElement = document.getElementById("batch-countdown");
+	const countdownInterval = setInterval(() => {
+		seconds--;
+		if (countdownElement) {
+			countdownElement.textContent = seconds;
+		}
+		if (seconds <= 0) {
+			clearInterval(countdownInterval);
+			progressContainer.remove();
+		}
+	}, 1000);
+}
 
 function collectAllTextNodes() {
 	const allNodesInfo = [];
